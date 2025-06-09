@@ -1,0 +1,33 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+
+RF24 radio(8, 10);  // CE, CSN
+
+const byte address[6] = "00001"; 
+int y2pin = 0;
+int Ypin = 1;
+int y2;
+int y;
+int yrev;
+int xrev;
+void setup() {
+  Serial.begin(9600);
+  //pinMode(7, INPUT);
+  pinMode(y2pin, INPUT);
+  pinMode(Ypin, INPUT);
+  radio.begin();
+  radio.openWritingPipe(address);
+  radio.setPALevel(RF24_PA_MIN);  
+  radio.stopListening();          
+}
+
+void loop() {
+  y2 = analogRead(y2pin);
+  y = analogRead(Ypin);
+  int data[2] = { y2, y };
+  radio.write(&data, sizeof(data));
+  //delay(100);
+  Serial.print(y2);
+  Serial.println(y);
+}
