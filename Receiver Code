@@ -1,0 +1,60 @@
+#include <SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+
+RF24 radio(8, 10);  // CE, CSN
+
+const byte address[6] = "00001";  // Stesso indirizzo del trasmettitore
+
+void setup() {
+  Serial.begin(9600);
+  radio.begin();
+  radio.openReadingPipe(0, address);
+  radio.setPALevel(RF24_PA_MIN);
+  radio.startListening();  // Modalità ricevitore
+  pinMode(5, OUTPUT); // left frontal motor
+  pinMode(6, OUTPUT);
+  pinMode(9, OUTPUT); // right frontal motor 
+  pinMode(3, OUTPUT);
+}
+
+void loop() {
+  if (radio.available()) {
+    int data[2];
+    radio.read(&data, sizeof(data));
+    int y2 = data[0];
+    int y = data[1]; 
+    int dir = y;
+  y = map(y, 0, 1023, 0, 255); 
+  y2 = map(y2, 0, 1023, 0, 255);
+if (y < 120) {
+    analogWrite(5, 255 - y);  // Backward (using yrev for reverse)
+    digitalWrite(6, LOW);
+    Serial.print("L:");
+    Serial.println(y);
+  } else if (y > 130) {
+    analogWrite(6, y);  // Forward
+    digitalWrite(5, LOW);
+    Serial.print("H:");
+    Serial.println(y);
+  } else {  // Dead zone (stop motor)
+    digitalWrite(5, LOW);
+    digitalWrite(6, LOW);
+  }
+  if (y2 < 120) {
+    analogWrite(3, 255 - y2);
+    digitalWrite(9, LOW);
+    Serial.println(y2);
+  } else if (y2 > 130) {
+    analogWrite(9, y2);
+    digitalWrite(3, LOW);
+    Serial.print("H:");
+    Serial.println(y2);
+  } else {  // Dead zone (stop motor)
+    digitalWrite(3, LOW);
+    digitalWrite(9, LOW);
+  }
+
+
+}
+}
